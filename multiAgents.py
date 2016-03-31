@@ -160,9 +160,50 @@ class MinimaxAgent(MultiAgentSearchAgent):
     """
       Your minimax agent (question 2)
     """
+    def max_choice(self, gameState, depth):
+      #return (value, this_node_action)
+      actions = gameState.getLegalActions(0)
+      max_temp = float('-inf')
+      action_temp = None
+      for action in actions:
+        this_value, suc_action = self.this_node_choice(gameState=gameState.generateSuccessor(0, action), depth=depth+1)
+        if this_value > max_temp:
+          max_temp = this_value
+          action_temp = action
+      return (max_temp, action_temp)
 
-    def getAction(self, gameState):
+    def min_choice(self, gameState, depth):
+      #return (value, this_node_action)
+      agentIndex = depth % gameState.getNumAgents()
+      actions = gameState.getLegalActions(agentIndex)
+      min_temp = float('inf')
+      action_temp = None
+      for action in actions:
+        this_value, suc_action = self.this_node_choice(gameState=gameState.generateSuccessor(agentIndex, action), depth=depth+1)
+        if this_value < min_temp:
+          min_temp = this_value
+          action_temp = action
+      return (min_temp, action_temp)
+
+    def gameOver(self, gameState, depth):
+      if gameState.isWin() or gameState.isLose() or depth == self.depth * gameState.getNumAgents():
+        return True
+      else:
+        return False
+
+    def this_node_choice(self, gameState, depth):
+      #return (value, this_node_action)
+      if self.gameOver(gameState, depth):
+        return (self.evaluationFunction(gameState), None)
+      if depth % gameState.getNumAgents() == 0:
+        return self.max_choice(gameState, depth)
+      else:
+        return self.min_choice(gameState, depth)
+    
+
+    def getAction(self, gameState): 
         """
+          gameState --> multiagentTestClasses.MultiagentTreeState
           Returns the minimax action from the current gameState using self.depth
           and self.evaluationFunction.
 
@@ -179,7 +220,9 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns the total number of agents in the game
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        root_max_value, root_max_action = self.this_node_choice(gameState, 0)
+        return root_max_action
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
