@@ -346,7 +346,55 @@ def betterEvaluationFunction(currentGameState):
       DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    newPos = currentGameState.getPacmanPosition()
+    newFood = currentGameState.getFood()
+    newGhostStates = currentGameState.getGhostStates()
+    newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+
+    for ghostState in newGhostStates:
+      if util.manhattanDistance(newPos, ghostState.getPosition()) <= 1:
+        return -99999999
+
+    countFood = newFood.count(True)
+    if countFood == 0:
+      return 99999999
+
+    walls = currentGameState.getWalls()
+    foods = currentGameState.getFood()
+    pacPos = currentGameState.getPacmanPosition()
+
+    def getLegalNextPosition(walls, pos):
+      posx = pos[0]
+      posy = pos[1]
+      nextPositions = []
+      for dx, dy in [(1,0),(0,1),(-1,0),(0,-1)]:
+        if walls[posx+dx][posy+dy] == False:
+          nextPositions.append((posx+dx,posy+dy))
+      return nextPositions
+
+    frontier = util.Queue()
+    explored = []
+
+    node = {'state':pacPos, 'cost':0}
+    frontier.push(node)
+
+    while not frontier.isEmpty():
+      thisNode = frontier.pop()  
+      if thisNode['state'] in explored:
+        continue
+      xx, yy = thisNode['state']
+      if foods[xx][yy]:
+        nearestFoodDistance = thisNode['cost']
+        break
+      explored.append(thisNode['state'])
+      nextPositions = getLegalNextPosition(walls, thisNode['state'])
+      for nextPosition in nextPositions:
+        node = {'state':nextPosition, 'cost':thisNode['cost']+1}
+        frontier.push(node)
+    pass
+
+    return 1000 - nearestFoodDistance - countFood*100
+
 
 # Abbreviation
 better = betterEvaluationFunction
