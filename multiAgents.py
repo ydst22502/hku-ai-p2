@@ -163,7 +163,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
     def max_choice(self, gameState, depth):
       #return (value, this_node_action)
       actions = gameState.getLegalActions(0)
-      max_temp = float('-inf')
+      max_temp = -99999999
       action_temp = None
       for action in actions:
         this_value, suc_action = self.this_node_choice(gameState=gameState.generateSuccessor(0, action), depth=depth+1)
@@ -176,7 +176,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
       #return (value, this_node_action)
       agentIndex = depth % gameState.getNumAgents()
       actions = gameState.getLegalActions(agentIndex)
-      min_temp = float('inf')
+      min_temp = 99999999
       action_temp = None
       for action in actions:
         this_value, suc_action = self.this_node_choice(gameState=gameState.generateSuccessor(agentIndex, action), depth=depth+1)
@@ -200,7 +200,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
       else:
         return self.min_choice(gameState, depth)
     
-
     def getAction(self, gameState): 
         """
           gameState --> multiagentTestClasses.MultiagentTreeState
@@ -228,13 +227,60 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     """
       Your minimax agent with alpha-beta pruning (question 3)
     """
+    def max_choice(self, gameState, depth, alpha, beta):
+      #return (value, this_node_action)
+      actions = gameState.getLegalActions(0)
+      max_temp = -99999999
+      action_temp = None
+      for action in actions:
+        #prune
+        if max_temp > beta:
+          continue
+        this_value, suc_action = self.this_node_choice(gameState=gameState.generateSuccessor(0, action), depth=depth+1, alpha=max(max_temp, alpha), beta=beta)
+        if this_value > max_temp:
+          max_temp = this_value
+          action_temp = action
+      return (max_temp, action_temp)
+
+    def min_choice(self, gameState, depth, alpha, beta):
+      #return (value, this_node_action)
+      agentIndex = depth % gameState.getNumAgents()
+      actions = gameState.getLegalActions(agentIndex)
+      min_temp = 99999999
+      action_temp = None
+      for action in actions:
+        #prune
+        if min_temp < alpha:
+          continue
+        this_value, suc_action = self.this_node_choice(gameState=gameState.generateSuccessor(agentIndex, action), depth=depth+1, alpha=alpha, beta=min(min_temp, beta))
+        if this_value < min_temp:
+          min_temp = this_value
+          action_temp = action
+      return (min_temp, action_temp)
+
+    def gameOver(self, gameState, depth):
+      if gameState.isWin() or gameState.isLose() or depth == self.depth * gameState.getNumAgents():
+        return True
+      else:
+        return False
+
+    def this_node_choice(self, gameState, depth, alpha, beta):
+      #return (value, this_node_action)
+      if self.gameOver(gameState, depth):
+        return (self.evaluationFunction(gameState), None)
+      if depth % gameState.getNumAgents() == 0:
+        return self.max_choice(gameState, depth, alpha = alpha, beta = beta)
+      else:
+        return self.min_choice(gameState, depth, alpha = alpha, beta = beta)
 
     def getAction(self, gameState):
         """
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        root_max_value, root_max_action = self.this_node_choice(gameState, depth = 0, alpha = -99999999, beta = 99999999)
+        return root_max_action
+        
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
