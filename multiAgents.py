@@ -338,6 +338,38 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         root_max_value, root_max_action = self.this_node_choice(gameState, 0)
         return root_max_action
 
+def mazeDistance(gameState, pos1 = (1,1), pos2 = (2,2)):
+
+  walls = gameState.getWalls()
+  frontier = util.Queue()
+  explored = []
+
+  def getLegalNextPosition(walls, pos):
+    posx = pos[0]
+    posy = pos[1]
+    nextPositions = []
+    for dx, dy in [(1,0),(0,1),(-1,0),(0,-1)]:
+      if walls[posx+dx][posy+dy] == False:
+        nextPositions.append((posx+dx,posy+dy))
+    return nextPositions
+
+  node = {'state':pos1, 'cost':0}
+  frontier.push(node)
+
+  while not frontier.isEmpty():
+    thisNode = frontier.pop()  
+    if thisNode['state'] in explored:
+      continue
+    if thisNode['state'] == pos2:
+      mazeDistance = thisNode['cost']
+      return mazeDistance
+    explored.append(thisNode['state'])
+    nextPositions = getLegalNextPosition(walls, thisNode['state'])
+    for nextPosition in nextPositions:
+      node = {'state':nextPosition, 'cost':thisNode['cost']+1}
+      frontier.push(node)
+  pass
+
 def betterEvaluationFunction(currentGameState):
     """
       Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
@@ -346,21 +378,23 @@ def betterEvaluationFunction(currentGameState):
       DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    newPos = currentGameState.getPacmanPosition()
-    newFood = currentGameState.getFood()
-    newGhostStates = currentGameState.getGhostStates()
-    newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+    pac_pos = currentGameState.getPacmanPosition()
+    foodMt = currentGameState.getFood()
+    ghostStates = currentGameState.getGhostStates()
+    scaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]
 
-    for ghostState in newGhostStates:
-      if util.manhattanDistance(newPos, ghostState.getPosition()) <= 1:
+    for ghostState in ghostStates:
+      if util.manhattanDistance(pac_pos, ghostState.getPosition()) < 3 and ghostState.scaredTimer == 0:
+      #if mazeDistance(currentGameState, pac_pos, ghostState.getPosition()) < 3:
         return -99999999
 
-    countFood = newFood.count(True)
+    countFood = foodMt.count(True)
     if countFood == 0:
       return 99999999
 
     walls = currentGameState.getWalls()
     foods = currentGameState.getFood()
+    capsules = currentGameState.getCapsules()
     pacPos = currentGameState.getPacmanPosition()
 
     def getLegalNextPosition(walls, pos):
@@ -391,9 +425,13 @@ def betterEvaluationFunction(currentGameState):
       for nextPosition in nextPositions:
         node = {'state':nextPosition, 'cost':thisNode['cost']+1}
         frontier.push(node)
-    pass
+      pass
 
-    return 1000 - nearestFoodDistance - countFood*100
+    nearestCapsuleDistance = 9999999
+    for capsule in capsules:
+      nearestCapsuleDistance = min(nearestCapsuleDistance, util.manhattanDistance(pacPos, capsule))
+
+    return  0 - min(nearestFoodDistance, nearestCapsuleDistance) - (countFood+len(capsules))*100
 
 
 # Abbreviation
