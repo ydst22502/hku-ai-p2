@@ -235,7 +235,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
       for action in actions:
         #prune
         if max_temp > beta:
-          continue
+          break
         this_value, suc_action = self.this_node_choice(gameState=gameState.generateSuccessor(0, action), 
           depth=depth+1, alpha=max(max_temp, alpha), beta=beta)
         if this_value > max_temp:
@@ -252,7 +252,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
       for action in actions:
         #prune
         if min_temp < alpha:
-          continue
+          break
         this_value, suc_action = self.this_node_choice(gameState=gameState.generateSuccessor(agentIndex, action), 
           depth=depth+1, alpha=alpha, beta=min(min_temp, beta))
         if this_value < min_temp:
@@ -397,11 +397,11 @@ def betterEvaluationFunction(currentGameState):
       if util.manhattanDistance(pac_pos, ghostState.getPosition()) < 1 and ghostState.scaredTimer == 0:
        #if mazeDistance(currentGameState, pac_pos, ghostState.getPosition()) < 3:
         return -99999999
-
+    
     countFood = foodMt.count(True)
     if countFood == 0:
       #print 'truetruetrue'
-      evaluationScore = 9999999999
+      evaluationScore = 99999999
 
     walls = currentGameState.getWalls()
     foods = currentGameState.getFood()
@@ -444,8 +444,7 @@ def betterEvaluationFunction(currentGameState):
     for capsule in capsules:
       nearestCapsuleDistance = min(nearestCapsuleDistance, util.manhattanDistance(pacPos, capsule))
 
-    return  evaluationScore + currentScore - min(nearestFoodDistance, nearestCapsuleDistance) - (countFood+len(capsules))*100
-
+    return evaluationScore + currentScore - min(nearestFoodDistance, nearestCapsuleDistance) - (countFood+len(capsules))*100
 
 # Abbreviation
 better = betterEvaluationFunction
