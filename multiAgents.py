@@ -321,6 +321,11 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     def this_node_choice(self, gameState, depth):
       #return (value, this_node_action)
       if self.gameOver(gameState, depth):
+        """
+        print depth
+        print self.evaluationFunction(gameState)
+        print gameState
+        """
         return (self.evaluationFunction(gameState), None)
       if depth % gameState.getNumAgents() == 0:
         return self.max_choice(gameState, depth)
@@ -336,6 +341,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         root_max_value, root_max_action = self.this_node_choice(gameState, 0)
+        #print root_max_action, root_max_value
         return root_max_action
 
 def mazeDistance(gameState, pos1 = (1,1), pos2 = (2,2)):
@@ -383,14 +389,19 @@ def betterEvaluationFunction(currentGameState):
     ghostStates = currentGameState.getGhostStates()
     scaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]
 
+    evaluationScore = 0
+    #####very important, "now" is better than "future"######
+    currentScore = currentGameState.getScore()
+
     for ghostState in ghostStates:
-      if util.manhattanDistance(pac_pos, ghostState.getPosition()) < 3 and ghostState.scaredTimer == 0:
-      #if mazeDistance(currentGameState, pac_pos, ghostState.getPosition()) < 3:
+      if util.manhattanDistance(pac_pos, ghostState.getPosition()) < 1 and ghostState.scaredTimer == 0:
+       #if mazeDistance(currentGameState, pac_pos, ghostState.getPosition()) < 3:
         return -99999999
 
     countFood = foodMt.count(True)
     if countFood == 0:
-      return 99999999
+      #print 'truetruetrue'
+      evaluationScore = 9999999999
 
     walls = currentGameState.getWalls()
     foods = currentGameState.getFood()
@@ -412,6 +423,8 @@ def betterEvaluationFunction(currentGameState):
     node = {'state':pacPos, 'cost':0}
     frontier.push(node)
 
+    nearestFoodDistance = 99999999
+
     while not frontier.isEmpty():
       thisNode = frontier.pop()  
       if thisNode['state'] in explored:
@@ -431,7 +444,7 @@ def betterEvaluationFunction(currentGameState):
     for capsule in capsules:
       nearestCapsuleDistance = min(nearestCapsuleDistance, util.manhattanDistance(pacPos, capsule))
 
-    return  0 - min(nearestFoodDistance, nearestCapsuleDistance) - (countFood+len(capsules))*100
+    return  evaluationScore + currentScore - min(nearestFoodDistance, nearestCapsuleDistance) - (countFood+len(capsules))*100
 
 
 # Abbreviation
