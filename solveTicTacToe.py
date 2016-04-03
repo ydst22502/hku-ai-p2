@@ -121,11 +121,7 @@ class GameState():
 class OneBoardState():
 
 	def __init__(self, board):
-		self.boardT = [['X','1','2'],
-						['3','4','5'],
-						['6','7','8']]
 		self.board = board
-		self.board = self.boardT
 		self.playerIndex = 0
 
 	def display(self):
@@ -216,8 +212,8 @@ class OneBoardMinimaxAgent():
 			return self.max_choice(gameState, depth)
 	
 	def getAction(self, gameState):
-		root_max_value, root_max_action = self.this_node_choice(gameState, 0)
-		return root_max_value
+		root_min_value, root_min_action = self.this_node_choice(gameState, 0)
+		return root_min_value
 
 class ReflexAgent():
 	def fingerPrint(self, boardN):
@@ -248,6 +244,16 @@ class ReflexAgent():
 				return True
 			return False
 
+		def isOne(boardN):
+			if isDead(boardN)\
+				or (countX(boardN) == 1 and boardN[1][1] != 'X')\
+				or (countX(boardN) == 3 and boardN[0][0] == 'X' and boardN[1][2] == 'X' and boardN[2][1] == 'X')\
+				or (countX(boardN) == 3 and boardN[0][2] == 'X' and boardN[1][0] == 'X' and boardN[2][1] == 'X')\
+				or (countX(boardN) == 3 and boardN[2][2] == 'X' and boardN[1][0] == 'X' and boardN[0][1] == 'X')\
+				or (countX(boardN) == 3 and boardN[2][0] == 'X' and boardN[0][1] == 'X' and boardN[1][2] == 'X'):
+				return True
+			return False
+
 		def isB(boardN):
 			gameState = OneBoardState(boardN)
 			oneBoardMinimaxAgent = OneBoardMinimaxAgent()
@@ -257,7 +263,7 @@ class ReflexAgent():
 			for action in actions:
 				if oneBoardMinimaxAgent.getAction(gameState.generateSuccessor(0, action)) == 1:
 					aFlag = True
-				if isDead(boardN) or (countX(boardN) == 1 and boardN[1][1] != 'X'):
+				if isOne(gameState.generateSuccessor(0, action).board):
 					oneFlag = True
 			if aFlag and oneFlag and countX(boardN)>=2:
 				return True
@@ -265,13 +271,8 @@ class ReflexAgent():
 
 		if countX(boardN) == 0:
 			return 'c'
-		if isDead(boardN)\
-			or (countX(boardN) == 1 and boardN[1][1] != 'X')\
-			or (countX(boardN) == 3 and boardN[0][0] == 'X' and boardN[1][2] == 'X' and boardN[2][1] == 'X')\
-			or (countX(boardN) == 3 and boardN[0][2] == 'X' and boardN[1][0] == 'X' and boardN[2][1] == 'X')\
-			or (countX(boardN) == 3 and boardN[2][2] == 'X' and boardN[1][0] == 'X' and boardN[0][1] == 'X')\
-			or (countX(boardN) == 3 and boardN[2][0] == 'X' and boardN[0][1] == 'X' and boardN[1][2] == 'X'):
-				return '1'
+		if isOne(boardN):
+			return '1'
 		if countX(boardN) == 1 and boardN[1][1] == 'X':
 			return 'cc'
 		oneBoardState = OneBoardState(boardN)
@@ -291,7 +292,7 @@ class ReflexAgent():
 			if s in dict:
 				return dict[s]
 			else:
-				return 'Nope'
+				return 0
 		def num2s(num):
 			dict = {49:'cc', 3:'a', 25:'bb', 35:'bc'}
 			if num in dict:
@@ -324,23 +325,29 @@ class ReflexAgent():
 		bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
 		chosenIndex = random.choice(bestIndices) # Pick randomly among the best
 
-		return legalMoves[chosenIndex]
+		return legalMoves[chosenIndex] #('B', 8)
+"""
+##Debug
+reflexAgent = ReflexAgent()
+boardT = [['0','1','2'],
+		['3','4','X'],
+		['6','7','X']]
 
-
+print reflexAgent.fingerPrint(boardT)
+"""
 
 if __name__ == '__main__':
 	game = GameState()
 	while not game.isLose():
 
-		#last move is AI move
+		#last move is AI move, now it's HM's turn
 		if game.playerIndex == 'AI':
-			print game.playerIndex + ': ' + game.latestPosition[0] + str(game.latestPosition[1])
-			game.display()
 			humanInput = raw_input('Your move: ')
 			try:
 				if game.isOkToPlace(humanInput[0],int(humanInput[1])) and len(humanInput) == 2:
 					game.playerIndex = 'HM'
 					game.placeTo(humanInput[0],int(humanInput[1]))
+					game.display()
 				else:
 					print 'WRONG INPUT!!'
 					continue
@@ -349,14 +356,20 @@ if __name__ == '__main__':
 				continue
 
 
-		#last move is HM move
+		#last move is HM move, now it's AI's turn
 		#if game.playerIndex == 'HM':
 		else: 
-			game.display()
 			game.playerIndex = 'AI'
 			reflexAgent = ReflexAgent()
-			print reflexAgent.getAction(game)
-	print game.playerIndex + ' is LOSSER!!'
+			action = reflexAgent.getAction(game)
+			print game.playerIndex + ': ' + action[0] + str(action[1])
+			game.placeTo(action[0], action[1])
+			game.display()
+
+	if game.playerIndex == 'AI':
+		print 'AI LOSES!!!'
+	else:
+		print 'You LOSE!!!'
 
 
 
